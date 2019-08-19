@@ -4,40 +4,39 @@ A prototype is just an object that is referenced by _other_ objects via an inter
 
 ## Default Prototype Links
 
-You probably know that all objects somehow have access to functions like `toString()` and `hasOwnProperty()`, without you having to do anything. This is because all objects have `Object.prototype` in their prototype chain by default, and properties are resolved recursively. If an object doesn't have the property we're trying to access, the prototype chain will be traversed until it is found, or `undefined` is returned. `Object.prototype` is normally the last link in the prototype chain, and it's `[[Prototype]]` is `null`.
+You probably know that all objects somehow have access to functions like `toString()` and `hasOwnProperty()`, without you having to do anything. This is because all objects have [`Object.prototype`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/prototype) as their `[[Prototype]]` by default, which is how objects have access to these properties. A prototype chain is composed by following `[[Prototype]]` links; the prototypes form a [singly linked list](https://en.wikipedia.org/wiki/Linked_list#Singly_linked_list). Plain objects - such as `foo` in the snippet below - have a single object in their prototype chain (`Object.prototype`), because the `[[Prototype]]` of `Object.prototype` is `null`, thus terminating the chain. But the prototype chain is not static and can be manipulated at runtime; more on this in a bit.
 
 ```js
-const foo = { x: 42 } // by default, foo is prototype-linked to Object.prototype
+const foo = { x: 42 } // foo is prototype-linked to Object.prototype
 Object.getPrototypeOf(foo) === Object.prototype // => true
-foo.toString() // => '[object Object]' - inherited from Object.prototype
+foo.toString() // => '[object Object]' - toString() is owned by Object.prototype
 foo.hasOwnProperty('x') // => true
 foo.hasOwnProperty('toString') // => false
 ```
 ![Default prototype link](fig-1.svg)
 
+## The Prototype Chain Train
+
+Getting away from `foo` and `bar` for a second, I find it helpful to think of the prototype chain as cars in a train, connected to each other. A property lookup is like a conductor going through the cars, looking for a person by name, starting with the first car. If no such person is found in the first car, the conductor proceeds to the next one; and so on. Once a person is found, the conductor disregards the possibility of other people with the same name in the following cars, and returns to the first car with the found person's ticket. We'll come back to this analogy later, so keep it in mind.
+
 ## Creating Prototype Links - Explicitly
 
-There are two other ways of creating prototype links: one is direct (explicit) and the other
-one is indirect (implicit). The direct way is by using [`Object.create()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create).
-It will return a new object,
-with it's internal `[[Prototype]]` pointing to the object provided as the first parameter. `[[Prototype]]`
-can be accessed directly as the `__proto__` property, although it is recommend to use `Object.getPrototypeOf()` instead.
-As mentioned before, the `prototype` property is **not** synonymous with `[[Prototype]]`.
+There are two other ways of creating prototype links: one is direct (explicit) and the other one is indirect (implicit). The direct way is by using [`Object.create()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create). It will return a new object, with it's internal `[[Prototype]]` pointing to the object provided as the first parameter. Although `[[Prototype]]` is an internal property, a reference to it can be obtained by either the `__proto__` property, or by using `Object.getPrototypeOf()`. The latter is preferred, because `__proto__` is deprecated.
 
 ```js
 const foo = { x: 42 }
 const bar = Object.create(foo) // bar is prototype-linked to foo
 Object.getPrototypeOf(bar) === foo // => true
-bar.__proto__ === foo // => true
+bar.__proto__ === foo // => true - but keep in mind __proto__ is deprecated
 bar.x // => 42 - x is actually set on foo, but can be accessed through the prototype chain
-bar.toString() // => '[object Object]' - toString() is inherited from Object.prototype
+bar.toString() // => '[object Object]' - toString() from Object.prototype
 ```
 
 ![Direct, explicit prototype link](./fig-2.svg)
 
 ### Function Objects
 
-In JavaScript, functions are "first-class objects". This means that we can treat them as any other object - add and remove properties, pass them around as parameters, and so on. It also means that they have `Object.prototype` in their prototype chain; so we can call familiar methods such as `toString()` and `hasOwnProperty()`. But function objects have some extra methods - such as `call()`, `apply()` and `bind()` - because of an extra object in their prototype chain, [`Function.prototype`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype). These methods are not set on each function object directly. Instead, each function object holds a reference to the same object, `Function.prototype`, in it's internal `[[Prototype]]` property.
+In JavaScript, functions are "first-class objects". This means that we can treat them as any other object - add and remove properties, pass them around as parameters, and so on. It also means that they have `Object.prototype` in their prototype chain; so we can call familiar methods such as `toString()` and `hasOwnProperty()`. But function objects can access some additional methods, such as `call()`, `apply()` and `bind()`. This is because they have [`Function.prototype`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype) as the `[[Prototype]]` - which, in turn, has `Object.prototype` as it's `[[Prototype]]`, thus forming a prototype chain of two objects, and giving function objects access to properties on both. Note that the properties on `Function.prototype` and `Object.prototype` are never copied over to the function objects; they remain set on the prototype objects.
 
 The prototype chain is traversed until a property with the accessed name is found. This means that some properties can end up being "shadowed" by other properties with the same name, but which are set on objects which come first in the prototype chain. `Function.prototype` provides an example, because it defines it's own version of `toString()`, which "shadows" `Object.prototype.toString()`.
 
@@ -55,6 +54,18 @@ Note how `Function.prototype.toString()` comes before `Object.prototype.toString
 
 ![Function object](./fig-3.svg)
 
+### Inheritance vs Dynamic Prototypes
+
+From the example above, you might conclude that JavaScript isn't that different from other languages, and objects can "inherit" from other objects. That is not the case, in any sense of the word. In real life, inheritance implies a transfer of ownership. In statically typed languages, inheritance means subclass instances get a _copy_ of the inherited properties, and _references_ to inherited methods - which can be overridden. That is not what happens in JavaScript; properties are not copied over, the prototype objects own them. Properties on prototype objects can be added/changed/removed, and the composition of the prototype chain itself can be altered. Also, there is no distinction between object, scalar or function properties; they are "inherited" in the same manner.
+
+Unfortunately, even the spec insists on (mis)using this word. By "inherited property", it means "property of an object that is not an own property but is a property (either own or inherited) of the object’s prototype" ([§4.3.35](http://www.ecma-international.org/ecma-262/6.0/index.html#sec-inherited-property)). It's like saying "I inherited an 8k TV from my grandfather... but he still owns it. I can only watch. And he can turn it off at any time; or turn it into an old sofa. Or make it disappear. And all my siblings also inherited it - along with all their children.". Thanks, grandpa.
+
+```js
+let foo = {x: 42}
+let bar = Object.create(foo)
+let baz = Object.create(bar) // baz -> bar -> foo
+```
+
 ## Creating Prototype Links - Implicitly
 
 ### The "prototype" property
@@ -66,18 +77,18 @@ Therefore, function objects have both `[[Prototype]]` and the `prototype` proper
 ```js
 function foo() {} // foo is a function object
 function bar() {} // bar is a function object
-foo.prototype !== bar.prototype // => true
-typeof foo.prototype // => "object" (implicitly created by JavaScript)
+foo.prototype !== bar.prototype // => true - each function object gets it's own prototype
 foo.prototype.x = 42 // linked objects will be able to access 'x'
 foo.y = 100 // functions are objects, so we can set props on them; but 'y' will not be inherited
 const obj = new foo() // obj is prototype-linked to foo.prototype
-obj.x // => 42 - "inherited" from foo.prototype
-obj.y // => undefined
+obj.hasOwnProperty("x") // => false - 'obj' has no such property
+obj.x // => 42 - this is "x" from foo.prototype
+obj.y // => undefined - only properties on the function's 'prototype' are accessible by linked objects
 ```
 
 ### The `constructor` Property
 
-We saw that when JS creates a function object, it also creates the prototype object. This object has a "constructor" property, and it is a reference to the function object. Because it's on the prototype, it will be inherited by objects constructed by the function. 
+We saw that when JS creates a function object, it also creates the prototype object. This object has a "constructor" property, which is a reference back to the function object. Because it's on the prototype, it will be accessible by objects constructed by the function. 
 
 ```js
 function foo() {}
@@ -101,9 +112,16 @@ obj.constructor === bar // => true - even though foo created obj
 
 ### Constructor Functions
 
-In JavaScript, almost **any** function becomes a constructor when called with `new`. As we saw previously, even a function like `function foo () {}` will still return a new object, prototype-linked to `foo.prototype`. The most notable exception consists of arrow functions, which cannot be called with `new`.
+In JavaScript, almost **any** function becomes a constructor when invoked with `new` - just for the duration of the constructor invocation. The same function can be called either as constructor, or as a regular function. As we saw previously, even a function like `function foo() {}` will still return a new object, prototype-linked to `foo.prototype`. The most notable exception consists of [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions), which cannot be called with `new`; attempting to do so will result in an exception, even in non-strict mode.
 
-Just before executing a constructor call, JavaScript will create a brand new object and it will set `this` to point to it for the duration of the constructor function's execution. It will also set the object's internal `[[Prototype]]` property to point to the function's `prototype`. At the end of the execution, the return value of the function is this newly created object; the class _instance_. JavaScript will automatically set it as the return value. Note that this happens only if a function is called with `new`:
+```js
+function foo() {} // just a regular function
+const result1 = new foo() // invoked as a constructor; result1 is an object
+const result2 = foo() // same function, invoked as a regular function; result2 is `undefined` because it returns nothing
+const result3 = new foo() // as a constructor again ! `result3` is a brand new empty object
+```
+
+The object returned from a constructor is created just before executing the constructor call, and it's internal `[[Prototype]]` property will point to the function's `prototype`. In addition, `this` will point to the newly created object for the duration of the constructor function's execution. At the end of the execution, the return value of the function is this newly created object; the class _instance_. We can override this behavior, and return something else - and the object initialized as the return value will simply be garbage collected, as there will be no references to it once the constructor call is done.
 
 ```js
 function Foo (initialCount) {
@@ -125,7 +143,7 @@ When we call a function without `new`, it won't implicitly create and return a n
 
 ### Constructing Objects and Functions
 
-The `foo = {x: 42}` notation is actually a shorthand for `foo = new Object(); foo.x = 42;`. So, the [`Object`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object) built-in is used as a constructor. `Object` is itself a function object, so it has `Function.prototype` as it's `[[Prototype]]`, which holds function-specific methods, like `call`; these can be invoked directly on `Object`. But objects constructed by `Object` are not function objects, and have a different `[[Prototype]]` - namely,  `Object.prototype`.
+Objects created like this: `foo = {x: 42}` will be linked to `Object.prototype` by default. Now that we know about constructors, we can go into a bit more depth. The linkage happens because the `foo = {x: 42}` notation is actually a shorthand for `foo = new Object(); foo.x = 42` - so, under the hood, the [`Object`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object) built-in is used as a constructor. `Object` is a function object, so it has `Function.prototype` as it's `[[Prototype]]`, but objects constructed by it are not function objects, and have a different `[[Prototype]]` - namely, `Object.prototype`.
 
 There is also a `Function` built-in, and it is also a function object. It will construct function objects, which will have `Function.prototype` as their `[[Prototype]]`. The constructor form is rarely used because parameters and the function body must be supplied as plain strings: `twice = new Function("x", "return x*2")`. So the shorthand form is normally used: `twice = function(x) { return x*2 }`. The constructed object is `twice`, and it does have access to `Function.prototype` methods.
 
@@ -137,7 +155,11 @@ let o1 = { foo: 42 } // plain object, constructed by Object
 let o2 = function() {} // function object, constructed by Function
 ```
 
-## Implementing Inheritance with Function Objects
+## Implementing "Inheritance" with Function Objects
+## Inheritance, if you Must
+
+- possible with `prototype`, but just use `class` as it adds some safety on language level
+- or, give up entirely and use TypeScript, like every other noob
 
 We've seen how the prototype chain can be used to enable objects to delegate functionality to other objects; JavaScript is a dynamic, prototype-based language. We can also use it as a class-based OO language; we've already seen some of the hallmarks - using `new` to create new objects, the `constructor` property. But there are a few more things that happen in class-based languages. One such thing is calling the "parent" constructor; when the sub-class is instantiated, one would expect the super-class constructor to be called. Therefore, we need to make sure to call the parent function, which is also the super-class constructor:
 
@@ -149,14 +171,14 @@ function Bar (initialCount) {
 We also need a way for `Bar` to inherit from `Foo`; this is done via the prototype chain:
 
 ```js
-Bar.prototype = Object.create(Foo)
+Bar.prototype = Object.create(Foo.prototype)
 ```
 
-Why not just `Bar.prototype = Foo.prototype` ? Because then the "prototype" property of both function objects would reference the exact same object. If you add something to `Bar`'s prototype, it would also be inherited by all `Foo` instances. This is not desirable because super classes should not inherit from their sub-classes.
+Why not just `Bar.prototype = Foo.prototype` ? Because then the `prototype` property of both function objects would reference the exact same object. If you add a property to `Bar.prototype`, that property would also be accessible by all `Foo` instances - and vice versa.
 
-We could also try `Bar.prototype = new Foo()`; this would also make inheritance happen. However, this can have unwanted side-effects. Let's say we create a `Foo` instance when the user clicks a button, and we log that action in the `Foo` function. However, if we check the logs, we will see that we always get an entry without the user doing anything - it's because we run the `Foo` function to setup `Bar`'s prototype.
+We could also try `Bar.prototype = new Foo()`. Once `Bar.prototype` is initialized with an object linked to `Foo.prototype`, it can be further enriched with properties specific to `Bar`, and these will not be accessible to objects linked to `Foo.prototype`. However, we need to be mindful of side effects, because we're actually invoking `Foo` when creating `Bar.prototype`. Whether this is or isn't an issue depends on what happens inside `Foo`, but it should be obvious that this is really just a more complex and error prone way of getting the same effect as setting `Bar.prototype` to an object explicitly linked to `Foo.prototype`, which does not involve actually invoking `Foo`.
 
-## Shadowing/Overriding
+## Shadowing Denied
 
 In most cases, creating a property on an object will succeed. If the objects happens to be used as a prototype, properties created on it will "shadow" properties with the same name further down the prototype chain. But there are two situations in which that will not happen, at least not as expected.
 

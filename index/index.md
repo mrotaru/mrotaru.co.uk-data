@@ -1,34 +1,15 @@
-#### Latest Blog Post: [JavaScript Prototypes](/blog/javascript-prototypes)
+## About
 
-## Expertise
+I've been writing web applications for about 6 years, full stack for the most part. I've worked with with both start-ups and larger companies, in a variety of industries - such as media, gaming and finance. One of the exciting aspects of being a software developer is getting to know these different industries from the inside, an opportunity to explore the different cultures. I'm available starting 16th of September, so [drop me a line](mailto:mihai.rotaru@gmx.com) if you're interested in working together.
 
-*   In-depth knowledge of vanilla **JavaScript** and **Node.js**, including **ES6/7** features
-*   Expert **React**, including server-rendering
-*   Databases: **MongoDB**, **MySQL**, **Neo4j** ; using **ElasticSearch** for indexing
-*   Modern **CSS**, layouts with **flexbox**, **BEM** methodology
-*   **Docker**, **Jenkins** for implementing **CI/CD** pipelines
-*   Implementing integration tests with **WebdriverIO**
-*   Shell scripting, **Linux** system administration (Ubuntu server and CentOS)
-*   **AWS** services: **Cognito**, **DynamoDB**, **EC2**
-*   **C++**, **PHP**
+## Tech Stack
 
-## Practices
+The numbers indicate years of experience
 
-*   **Agile** - quick, focused iterations help with keeping stakeholders in the loop
-*   Clean code - readability is king; keep things simple and explicit, avoid "smart" and "magic"
-*   A test-driven development process leads to higher quality software
-*   Most tests should be fast unit tests, with a few integration tests for the whole system
-*   Preffer **functional programming** and avoid side effects whenever possible
-*   Preffer face to face stakeholder conversations to heavy tools such as JIRA
-*   Cautios of "we'll fix it later" - compromising code quality is rarely worth it, even in the short term
-*   Avoid writing code that _might_ be needed in the future; **<abbr title="You Ain't Gonna Need It">YAGNI</abbr>**
+**JavaScript** (6)  **Node.js** (5) **React** (3) **MongoDB** (2) **MySQL** (2) **Docker** (2) **Jenkins** (4) **WebdriverIO** (4) **AWS** (3)
 
-## Experience
-
-*   06.'16 - 12.'17 - leading role in developing the marketing platform for Gamesys, a large gaming company
-*   12.'15 - 06.'16 - front-end developer for Thortful, greeting card startup
-*   01.'14 - 12.'15 - sole full-stack develpoer for a travel startup, Trufflecat
-*   01.'13 - 08.'13 - full-stack contracting for Pep Publishing, a media company
+## Blog Posts
+- 2018-06-14 [JavaScript Prototypes](/blog/javascript-prototypes)
 
 ## Around the Web
 
