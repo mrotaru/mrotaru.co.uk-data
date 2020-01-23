@@ -6,12 +6,13 @@ Many programming languages support associating behaviour (a set of methods) with
 
 The prototype mechanism is at the core of how this is done in JavaScript. You take all the shared methods and set them as properties on an object; the resulting object is called a prototype object. You then create other objects and "link" them to the prototype object. This way, the objects can share the same prototype object and have access to all the functionality and data on it - in addition to their own properties. So button objects would store properties specific to each button as _own_ properties (stuff like the text label, or the click handler) whereas shared functionality - like rendering - would be _delegated_ to properties on the prototype object.
 
-Above we describe [prototype-based programming](https://en.wikipedia.org/wiki/Prototype-based_programming), but normally when developers talk of object-oriented programming, they have something else in mind - namely, [class-based programming](https://en.wikipedia.org/wiki/Class-based_programming). JavaScript supports both, but the important thing to keep in mind is that classes are also implemented via the prototype mechanism. So to understand classes, first we must understand prototypes.
+Above we describe [prototype-based programming](https://en.wikipedia.org/wiki/Prototype-based_programming), but generally object-oriented programming is associated with a similar, but different paradigm - namely, [class-based programming](https://en.wikipedia.org/wiki/Class-based_programming). JavaScript supports both, but the important thing to keep in mind is that classes are also implemented via the prototype mechanism. So to understand classes, first we must understand prototypes.
 
 ### Prototype References
 
-An object references its prototype object via an internal property which the JavaScript language specification calls "the `[[Prototype]]` internal slot". You might be thinking that it's a bit early for spec-level details - and you'd be correct. Unfortunately, `[[Prototype]]` has to be mentioned, to distinguish it from the "prototype" property present on functions. They both have a role to play but for now we'll focus on `[[Prototype]]` as it is more directly relevant and also easier to understand; to wit: it is an objects internal `[[Prototype]]` property that references the objects prototype, and _not_ the "prototype" property.
+So how does an object reference its prototype ? You'd think it's just a property named "prototype" - but you'd be wrong. While you can _can_ have such a property, generally it wouldn't get any special treatment - it's just like any other property. The _real_ prototype is referenced via an "internal slot", as [the spec calls it](https://www.ecma-international.org/ecma-262/10.0/#sec-object-internal-methods-and-internal-slots); we'll call it a _hidden_ property - meaning it can't be directly accessed, like a "normal" property. Every object has a few of these hidden properties, and the one used to reference the objects prototype is called [`[[Prototype]]`](https://www.ecma-international.org/ecma-262/10.0/#sec-ordinary-object-internal-methods-and-internal-slots).
 
+To confuse matters even more, the "prototype" property does get some special treatment every time a function is invoked as a constructor, and the function happens to have such a property. This will be discussed later - first let's understand exactly how this fancy `[[Prototype]]` is being used.
 
 ### Property Resolution and The Prototype Chain
 
@@ -24,9 +25,11 @@ If `null` is reached without the property being found, then the `undefined` valu
 
 Before the Javascript engine starts executing any scripts, it pre-populates the environment with some useful objects, known as "built-ins" or "intrinsics". One such built-in is `Object`, and it references another built-in object via it's "prototype" property; this other object is commonly referred to as `Object.prototype`. We will talk about `Object` later, but for now we only care about `Object.prototype` because it can be found in the prototype chain of virtually all objects as the last link. In the diagrams that follow, built-in objects have a yellow background.
 
-If a prototype object is not specified when an object is created, the object will be linked to `Object.prototype`. In the case of objects created using the literal notation (like `foo` in the snippet below), the prototype chain will be composed of only one object, `Object.prototype`, because the `[[Prototype]]` of `Object.prototype` is `null`. Objects with only `Object.prototype` in their prototype chain are known as "plain" objects.
+If a prototype object is not specified when an object is created, the object will be linked to `Object.prototype`. In the case of objects created using the literal notation (like `foo` in the snippet below), the prototype chain will be composed of only one object, `Object.prototype`, because the `[[Prototype]]` of `Object.prototype` is `null`. We'll call this type of objects, with only `Object.prototype` in their prototype chain, "plain" objects.
 
-So how can we verify that the prototype links are setup as intended ? Although `[[Prototype]]` is an internal property, we can get a reference to the underlying object by using [`Object.getPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf), and the `===` operator can be used to determine whether any variable or object property reference the same object. We won't be using the `__proto__` property because it is only guaranteed to be available in browser environments, for backwards-compatibility reasons - whereas JavaScript is no longer constrained to the browser.
+So how can we verify that the prototype links are setup as intended ? Although `[[Prototype]]` is an internal property, we can get a reference to the underlying object by using [`Object.getPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf), and the `===` operator can be used to determine whether any variable or object property reference the same object. We won't be using the [`__proto__`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto) property because it is only guaranteed to be available in browser environments for backwards-compatibility reasons, and is considered deprecated.
+
+Objects have to kinds of properties: _own_ and _shared_. Own properties are set on the object itself, whereas shared properties are accessed through the prototype chain, and are also called "inherited". Below, `foo` has an own property, "x", and a number of shared properties - all the properties on `Object.prototype` (like `hasOwnProperty()`, `toString()`, etc). Note that it doesn't matter what type the shared properties have - strings, functions, numbers, etc - they are all shared in exactly the same way.
 
 ```js
 let foo = { x: 42 }; // foo is prototype-linked to Object.prototype by default
@@ -58,11 +61,17 @@ Object.getPrototypeOf(empty) === true; // => true
 
 ![Direct, explicit prototype link](explicit-prototype-link.svg)
 
-What about changing the `[[Prototype]]` of objects that were already created ? [`Object.setPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf) has you covered; it takes two objects as parameters, and will set the `[[Prototype]]` of the first object to point to the second one. And since we're dealing with prototype chains containing more than one object, let's introduce another useful function: [`Object.prototype.isPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf). Because it is an own property of `Object.prototype`, like `toString()`, `isPrototypeOf()` can be invoked as a property of virtually any object and returns `true` if the object it is called on can be found in the prototype chain of the object given as a parameter. The resulting object diagram after executing the snippet below is exactly the same as for the previous one, so it's not repeated.
+What about changing the `[[Prototype]]` of objects that were already created ? [`Object.setPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf) has you covered; it takes two objects as parameters, and will set the `[[Prototype]]` of the first object to point to the second one. And since we're dealing with prototype chains containing more than one object, let's introduce another useful function: [`Object.prototype.isPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf). Because it is an own property of `Object.prototype`, like `toString()`, `isPrototypeOf()` can be invoked as a property of virtually any object and returns `true` if the object it is called on can be found in the prototype chain of the object given as a parameter.
 
 ```js
 let foo = { x: 42 }; // foo is linked to Object.prototype
 let bar = {}; // bar is linked to Object.prototype
+bar.x; // => undefined
+foo.isPrototypeOf(bar); // => false - foo is not in the prototype chain of bar
+```
+![Direct, explicit prototype link](default-prototype-link-initial.svg)
+
+```js
 Object.setPrototypeOf(bar, foo); // change the [[Prototype]] of bar to reference foo
 Object.getPrototypeOf(bar) === foo; // => true - bar is linked to foo
 foo.isPrototypeOf(bar); // => true - foo is in the prototype chain of bar
@@ -71,6 +80,7 @@ Object.prototype.isPrototypeOf(foo); // => true
 bar.x; // => 42
 bar.toString(); // => '[object Object]'
 ```
+![Direct, explicit prototype link](explicit-prototype-link.svg)
 
 If a completely empty object is desired, with no properties whatsoever - either own or shared - it can be created with `Object.create(null)`. Existing objects can be "stripped" of their prototype chains with `Object.setPrototypeOf(obj, null)` - but they will keep their own properties. Such objects will not have access to any functions through the prototype chain - not even basic object functions like `toString()` and `hasOwnProperty()`. If a "stripped" object is used as a prototype, then any objects that link to it will also lose access to these functions. In the snippet below, because we change the `[[Prototype]]` of `foo`, `bar` looses access to functions on `Object.prototype` - even though `bar` itself is unchanged.
 
