@@ -12,7 +12,7 @@ Above we describe [prototype-based programming](https://en.wikipedia.org/wiki/Pr
 
 So how does an object reference its prototype ? You'd think it's just a property named "prototype" - but you'd be wrong. While you can _can_ have such a property, generally it wouldn't get any special treatment - it's just like any other property. The _real_ prototype is referenced via an "internal slot", as [the spec calls it](https://www.ecma-international.org/ecma-262/10.0/#sec-object-internal-methods-and-internal-slots); we'll call it a _hidden_ property - meaning it can't be directly accessed, like a "normal" property. Every object has a few of these hidden properties, and the one used to reference the objects prototype is called [`[[Prototype]]`](https://www.ecma-international.org/ecma-262/10.0/#sec-ordinary-object-internal-methods-and-internal-slots).
 
-To confuse matters even more, the "prototype" property does get some special treatment every time a function is invoked as a constructor, and the function happens to have such a property. This will be discussed later - first let's understand exactly how this fancy `[[Prototype]]` is being used.
+To confuse matters even more, the "prototype" property does get some special treatment every time a function is invoked as a constructor, and the function happens to have a property with that particular name. This will be discussed later - first let's understand exactly how this fancy `[[Prototype]]` is being used.
 
 ### Property Resolution and The Prototype Chain
 
@@ -27,7 +27,7 @@ Before the Javascript engine starts executing any scripts, it pre-populates the 
 
 If a prototype object is not specified when an object is created, the object will be linked to `Object.prototype`. In the case of objects created using the literal notation (like `foo` in the snippet below), the prototype chain will be composed of only one object, `Object.prototype`, because the `[[Prototype]]` of `Object.prototype` is `null`. We'll call this type of objects, with only `Object.prototype` in their prototype chain, "plain" objects.
 
-So how can we verify that the prototype links are setup as intended ? Although `[[Prototype]]` is an internal property, we can get a reference to the underlying object by using [`Object.getPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf), and the `===` operator can be used to determine whether any variable or object property reference the same object. We won't be using the [`__proto__`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto) property because it is only guaranteed to be available in browser environments for backwards-compatibility reasons, and is considered deprecated.
+So how can we verify that the prototype links are setup as intended ? Although `[[Prototype]]` is an internal property, we can get a reference to the underlying object by using [`Object.getPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf). We could also use the [`__proto__`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto) property, but it is only guaranteed to be available in browser environments for backwards-compatibility reasons, and is considered deprecated.
 
 Objects have to kinds of properties: _own_ and _shared_. Own properties are set on the object itself, whereas shared properties are accessed through the prototype chain, and are also called "inherited". Below, `foo` has an own property, "x", and a number of shared properties - all the properties on `Object.prototype` (like `hasOwnProperty()`, `toString()`, etc). Note that it doesn't matter what type the shared properties have - strings, functions, numbers, etc - they are all shared in exactly the same way.
 
@@ -44,7 +44,7 @@ Object.prototype.x; // undefined - prototype links go only one way
 
 ### Creating Explicit Prototype Links
 
-What if you want to create objects linked to a specific object, instead of `Object.prototype` ?
+What if you want to create objects linked to a specific object, instead of `Object.prototype`?
 This can be achieved using [`Object.create()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create). It will return a new object, with it's internal `[[Prototype]]` pointing to the object provided as the first parameter. The created objects will have access to the prototype objects' properties.
 
 In most cases, setting a custom prototype doesn't mean the resulting object looses access to properties on `Object.prototype` - because the object that is supplied as a prototype probably has a prototype chain itself, that includes `Object.prototype`.
@@ -61,7 +61,7 @@ Object.getPrototypeOf(empty) === true; // => true
 
 ![Direct, explicit prototype link](explicit-prototype-link.svg)
 
-What about changing the `[[Prototype]]` of objects that were already created ? [`Object.setPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf) has you covered; it takes two objects as parameters, and will set the `[[Prototype]]` of the first object to point to the second one. And since we're dealing with prototype chains containing more than one object, let's introduce another useful function: [`Object.prototype.isPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf). Because it is an own property of `Object.prototype`, like `toString()`, `isPrototypeOf()` can be invoked as a property of virtually any object and returns `true` if the object it is called on can be found in the prototype chain of the object given as a parameter.
+What about changing the `[[Prototype]]` of objects that were already created? [`Object.setPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf) has you covered; it takes two objects as parameters, and will set the `[[Prototype]]` of the first object to point to the second one. And since we're dealing with prototype chains containing more than one object, let's introduce another useful function: [`Object.prototype.isPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf). Because it is an own property of `Object.prototype`, like `toString()`, `isPrototypeOf()` can be invoked as a property of virtually any object and returns `true` if the object it is called on can be found in the prototype chain of the object given as a parameter.
 
 ```js
 let foo = { x: 42 }; // foo is linked to Object.prototype
@@ -97,11 +97,11 @@ bar.x; // => 42
 
 #### Function Objects
 
-Functions are "first-class objects"; this has a wide range of implications for many fundamental aspects of the language, but essentially it means that we can treat function objects as any other object - add and remove properties, pass them around as parameters, and so on. It also means that they have `Object.prototype` in their prototype chain, so function objects can invoke familiar methods such as `toString()` and `hasOwnProperty()`. But they can access some additional methods, such as `call()`, `apply()` and `bind()`. This is because they have another built-in object, [`Function.prototype`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype), as their `[[Prototype]]` - which, in turn, has `Object.prototype` as it's `[[Prototype]]`.
+Functions are "first-class objects"; essentially it means that we can treat them as any other object - add and remove properties, pass them around as parameters, and so on. It also means that they have `Object.prototype` in their prototype chain, so function objects can invoke familiar methods such as `toString()` and `hasOwnProperty()`. But they can access some additional methods, such as `call()`, `apply()` and `bind()`. This is because they have another built-in object, [`Function.prototype`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/prototype), as their `[[Prototype]]` - which, in turn, has `Object.prototype` as it's `[[Prototype]]`.
 
 The code snippet and diagram below demonstrate the relationship between a function object, `Function.prototype` and `Object.prototype`. The function object has a prototype chain composed of two objects, thus  having access to properties on both. Note that the properties on `Function.prototype` and `Object.prototype` are never copied over to the function objects; they remain set on the prototype objects, and are accessed indirectly - through the prototype chain.
 
-In addition, in the example below you can see what happens when multiple objects in the prototype chain have a property with the same name. Put simply, the first property to be reached, is the one that will be used; this is called _shadowing_, because the first found property "shadows" any properties withe same name that are set on "downstream" objects on the prototype chain. `Function.prototype` provides an example, because it defines it's own version of `toString()`, which shadows `Object.prototype.toString()`.
+In addition, in the example below you can see what happens when multiple objects in the prototype chain have a property with the same name. Put simply, the first property to be reached, is the one that will be used; this is called _shadowing_, because the first found property "shadows" any properties withe same name that are set on "downstream" objects in the prototype chain. `Function.prototype` provides an example, because it defines it's own version of `toString()`, which shadows `Object.prototype.toString()`.
 
 ```js
 function foo() {}; // foo is a function object; by default, functions return the `undefined` value
@@ -218,32 +218,19 @@ let result4 = bar() // result4 is a number, 500 - non-constructor invocations ca
 ##### Let's Break Things
 
 Note in the diagram above that the constructed objects aren't _directly_ associated with the function that created them; the connection goes through an intermediate prototype object. These links could also be called "fragile", because
-it's not safe to assume that the function object referenced by an object's `constructor` property is the function object that actually created the object. There are a number of ways this assumption could be rendered false; one of them is simply messing with a function's `prototype`. 
+it's not safe to assume that the function object referenced by an object's `constructor` property is the function object that actually created the object, because a functions `constructor` property is not protected in any way and can be changed to point to something else - either on purpose, or by mistake.
 
 
 ```js
 function foo() {}
 foo.prototype.constructor === foo // => true
 foo.prototype.constructor = "bad idea" // changing the constructor property directly
-let obj1 = new foo() // create an instance
-obj1.constructor === "bad idea" // => true - instance's "constructor" is misleading
+let obj = new foo() // create an instance
+obj.constructor === "bad idea" // => true - instance's "constructor" is misleading
 ```
 ![Messing with the constructor property](bad-idea-1.svg)
 
-
-Another way is to re-assign the `prototype` property of a function object to something completely different. In the following snippet, we re-assign it to a an object which has a `constructor` property that references a plain object.
-
-```js
-function foo() {}
-const bar = {}
-foo.prototype = { // changing a function's `prototype` at runtime
-  constructor: bar, // constructor property references a plain object
-}
-let obj = new foo()
-obj.constructor === bar // => true - created by a plain object ??
-obj.constructor === "shadowing string" // will shadow the prototype's "constructor"
-```
-TODO diagram
+There are a couple of other ways we could "break" `constructor` - by shadowing it with an own property, or by removing it from the prototype with the [`delete`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/delete) operator. Of course, this should be avoided; the point of this section is just to illustrate that doing so is not illegal in JavaScript, as it would be in other object-oriented languages.
 
 #### Functions as Methods
 
@@ -267,21 +254,15 @@ obj2.x // => 200
 
 ![Using a function object as a method](method.svg)
 
-##### Borrwing
-
-```js
-String.prototype.concat.apply()
-```
-
 #### Functions as... Functions
 
-Of course, functions can be invoked as plain functions; the only question is how will `this` references be resolved, if existing. Generally if a function contains `this` references, it should only be invoked as a constructor, or as a method. What happens if such a function is invoked as a plain function depends on "strictness" - in strict mode, `this` will be the `undefined` value. In non-strict, `this` will reference the global object - so the function will run without complaining, but might have unwanted side effects. A detailed treatment of `this` is out of scope for this article, as it is not strictly necessary for understanding how prototypes work - but can be found in [YDKJS/this & Object Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/this%20%26%20object%20prototypes/ch2.md). In this post the assumption is that functions are not used in conjunction with [`bind`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind) or [`call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)/[`apply`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply), as these utilities can change how `this` is resolved.
+Of course, functions can be invoked as plain functions; the only question is how will `this` references be resolved, if existing. Generally if a function contains `this` references, it should only be invoked as a constructor, or as a method. What happens if such a function is invoked as a plain function (and without [`call()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)/[`apply()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply) or [`bind()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)) depends on "strictness" - in strict mode, `this` will be the `undefined` value. In non-strict, `this` will reference the global object - so the function will run without complaining, but might have unwanted side effects. A detailed coverage of how `this` works can be found in [YDKJS/this & Object Prototypes](https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/this%20%26%20object%20prototypes/ch2.md).
 
 #### The Object Built-In
 
-As previously discussed, objects created using the literal notation (such as `foo` in the snippet below) will be linked to `Object.prototype`. Now that we know about constructors, we can dive a bit deeper. The linkage happens because the literal notation is equivalent to using the [`Object`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object) built-in as a constructor - the constructed objects will be prototype-linked to `Object.prototype`. The `Object` built-in itself, because it is a function object, is prototype-linked to `Function.prototype`.
+As previously discussed, objects created using the literal notation (such as `foo` in the snippet below) will be linked to `Object.prototype`; this is because using the literal notation is equivalent to using the [`Object`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object) built-in as a constructor. The `Object` built-in itself, because it is a function object, is prototype-linked to `Function.prototype`.
 
-Some commonly used object properties are set on `Object.prototype` - such as `hasOwnProperty()`. These will be accessible to all objects - except those created with a `null` `[[Prototype]]`. However, many other useful properties are on the `Object` built-in itself - and therefore will not be accessible to objects via the prototype chain. Examples include `getPrototypeOf()` - you can't just call it on a plain object; instead, you call it on `Object`, and pass the plain object as a parameter. In fact, `Object` contains many more properties, compared to `Object.prototype`.
+Some commonly used object properties are set on `Object.prototype` - such as `hasOwnProperty()`. These will be accessible to all objects - except those created with a `null` `[[Prototype]]`. However, many other useful properties are on the `Object` built-in itself - and therefore will not be accessible to objects via the prototype chain. Examples include `getPrototypeOf()` - you can't just call it on a plain object; instead, you call it on `Object`, and pass the plain object as a parameter. In fact, `Object` contains many more properties, compared to `Object.prototype`; for a full list, check out [the MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object).
 
 ```js
 let foo = {} // object created using the literal notation
@@ -296,11 +277,11 @@ Object.getPrototypeOf(Object) === Function.prototype // => true
 
 #### The Function Built-In
 
-The `Function` built-in is also a function object. It will construct function objects, which will have `Function.prototype` as their `[[Prototype]]`. The constructor form is rarely used because parameters and the function body must be supplied as plain strings. So the shorthand - sometimes called "literal" - form is normally used. But, like with objects, both of these forms are equivalent. Unlike `Object`, the `Function` built-in has virtually no useful own properties. It is also unusual in that it's `prototype` and `[[Prototype]]` refer to the same object.
+The `Function` built-in is also a function object. It will construct function objects, which will have `Function.prototype` as their `[[Prototype]]`. The constructor form is rarely used because parameters and the function body must be supplied as plain strings; instead, function declarations and expressions are a lot more common. But, like with objects, both of these forms are equivalent. Unlike `Object`, the `Function` built-in has virtually no useful own properties. It is also unusual in that it's `prototype` and `[[Prototype]]` refer to the same object.
 
 ```js
 let twice1 = new Function("x", "return x*2") // constructor form
-let twice2 = function(x) { return x*2 } // literal notation
+let twice2 = function(x) { return x*2 } // function expression
 twice1.constructor === Function // => true
 twice2.constructor === Function // => true
 Object.getPrototypeOf(twice1) === Function.prototype // => true
@@ -327,27 +308,21 @@ obj instanceof Function // => false; Function.prototype is not in obj1's prototy
 ```
 ![instanceof](instance-of.svg)
 
-If using this operator, keep in mind that the `prototype` property of a function can be changed - and you can end up with an object not being an `instanceof` the function that constructed the object.
-
-```js
-// continuing previous snippet...
-foo.prototype = { y: 100 };
-obj instanceof foo; // => false !
-obj.constructor === foo; // => true !
-```
+Much like the `constructor` property on an object, the `instanceof` operator also can be "broken" because the `prototype` property of a function can be changed - although, unlike `constructor`, it cannot be removed.
 
 ## Summary
 
 JS automatically adds a "prototype" property to function objects. When we instantiate objects by calling the function as a constructor (with `new`), the created objects will have access to properties on the `prototype` object. One such property is the `constructor` property, added by JS and which normally points to the function. We can create prototype-linked objects directly, with `Object.create`.
 
-An object's `prototype` property is **not** the same as it's internal `[[Prototype]]` link; if the object is a function, then it's `prototype` will become the `[[Prototype]]` of objects created when that function is called as a constructor. We can use `__proto__` or `Object.getPrototypeOf` to get a reference to the object referenced by the internal `[[Prototype]]` slot, and we can use either `__proto__` or `Object.setPrototypeOf` to set it's value.
+An object's `prototype` property is **not** the same as it's internal `[[Prototype]]` link; if the object is a function, then it's `prototype` will become the `[[Prototype]]` of objects created when that function is called as a constructor. The `Object.getPrototypeOf()` function can be used to get a reference to `[[Prototype]]`, and `Object.setPrototypeOf()` can be used to change it.
 
 Reading the value of a property that is not on the target object will traverse the prototype chain and return the first one found, or `undefined`, whereas the algorithm for setting such properties is more complex, calling the first found setter and preventing the shadowing of read-only properties.
 
+Care needs to be exercised if relying on OOP features like the `constructor` property or the `instanceof` operator as they can be misleading.
+
 ## Resources
 
-- [You Don't Know JS: this & Object Prototypes](https://www.ebooks.com/1734321/you-don-t-know-js-this-object-prototypes/simpson-kyle/) ([github](https://github.com/getify/You-Dont-Know-JS/blob/master/this%20&%20object%20prototypes/README.md#you-dont-know-js-this--object-prototypes)) (The YDKJS series is the best resource for learning JS in-depth)
+- [You Don't Know JS: this & Object Prototypes](https://www.ebooks.com/1734321/you-don-t-know-js-this-object-prototypes/simpson-kyle/) ([github](https://github.com/getify/You-Dont-Know-JS/blob/master/this%20&%20object%20prototypes/README.md#you-dont-know-js-this--object-prototypes)) (The YDKJS series is an excellent resource for learning JS in-depth)
 - [Object-oriented programming](https://en.wikipedia.org/wiki/Object-oriented_programming)
 - [Prototype-based programming](https://en.wikipedia.org/wiki/Prototype-based_programming)
 - [Class-based programming](https://en.wikipedia.org/wiki/Class-based_programming)
-- [§ 9.1](http://www.ecma-international.org/ecma-262/6.0/index.html#sec-ordinary-object-internal-methods-and-internal-slots)
