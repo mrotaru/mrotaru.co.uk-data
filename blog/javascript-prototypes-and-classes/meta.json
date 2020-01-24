@@ -1,8 +1,8 @@
 {
-  "title": "JavaScript Prototypes and Classes",
+  "title": "JavaScript Prototypes",
   "template": "blog-post",
-  "route": "/blog/javascript-prototypes-and-classes",
-  "keywords": "javascript, prototypes, class",
+  "route": "/blog/javascript-prototypes",
+  "keywords": "javascript, prototype",
   "date-published": "2017-06-10",
-  "date-updated": "2019-04-07"
+  "date-updated": "2020-01-24"
 }

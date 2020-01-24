@@ -277,7 +277,7 @@ Object.getPrototypeOf(Object) === Function.prototype // => true
 
 #### The Function Built-In
 
-The `Function` built-in is also a function object. It will construct function objects, which will have `Function.prototype` as their `[[Prototype]]`. The constructor form is rarely used because parameters and the function body must be supplied as plain strings; instead, function declarations and expressions are a lot more common. But, like with objects, both of these forms are equivalent. Unlike `Object`, the `Function` built-in has virtually no useful own properties. It is also unusual in that it's `prototype` and `[[Prototype]]` refer to the same object.
+The `Function` built-in is also a function object. It will construct function objects, which will have `Function.prototype` as their `[[Prototype]]`. The constructor form is rarely used because parameters and the function body must be supplied as plain strings; instead, function declarations and expressions are a lot more common - but the resulting function objects are equivalent, regardless of which method is used. Unlike `Object`, the `Function` built-in has virtually no useful own properties. It is also unusual in that it's `prototype` and `[[Prototype]]` refer to the same object.
 
 ```js
 let twice1 = new Function("x", "return x*2") // constructor form
