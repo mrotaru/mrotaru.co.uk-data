@@ -2,24 +2,31 @@
 
 I've been writing web applications for quite a few years now, full stack for the most part.
 
+<ul class='list--media'>
+  <li>
+    <a
+      href="https://stackexchange.com/users/201300?tab=accounts">
+      <img
+        src="https://stackexchange.com/users/flair/201300.png"
+        width='208'
+        height='58'
+        alt="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
+        title="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
+      />
+      </a>
+    </li>
+    <li><a href="https://github.com/mrotaru">https://github.com/mrotaru</a></li>
+    <li><a href="https://codepen.io/mrotaru">https://codepen.io/mrotaru</a></li>
+    <li><a href="mihai.rotaru@gmx.com">mailto:mihai.rotaru@gmx.com</a></li>
+</ul>
+
 ## Blog Posts
-- 2020-01-05 [JavaScript Prototypes](/blog/javascript-prototypes-and-classes)
 
-## Around the Web
-
-<aside>
-  <a
-    href="https://stackexchange.com/users/201300?tab=accounts">
-    <img
-      src="https://stackexchange.com/users/flair/201300.png"
-      width='208'
-      height='58'
-      alt="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
-      title="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
-    />
-    </a>
-</aside>
-
-*   GitHub: [https://github.com/mrotaru](https://github.com/mrotaru)
-*   Codepen: [https://codepen.io/mrotaru](https://codepen.io/mrotaru)
-*   Email: [mihai.rotaru@gmx.com](mailto:mihai.rotaru@gmx.com)
+<ul class='list--media'>
+  <li class='blog-post-list-item'>
+    <h3><a href="/blog/javascript-prototypes">JavaScript Prototypes</a></h3>
+    <p><span title="Last Updated" class="date">2020-01-26</span> <span class="separator">—</span>
+    A detailed description of the prototype mechanism, the foundation of object-oriented programming in JavaScript
+    </p>
+  </li>
+</ul>

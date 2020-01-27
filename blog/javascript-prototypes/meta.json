@@ -1,5 +1,6 @@
 {
   "title": "JavaScript Prototypes",
+  "description": "A detailed description of the prototype mechanism, the foundation of object-oriented programming in JavaScript",
   "template": "blog-post",
   "route": "/blog/javascript-prototypes",
   "keywords": "javascript, prototype",

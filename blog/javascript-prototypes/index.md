@@ -16,10 +16,11 @@ To confuse matters even more, the "prototype" property does get some special tre
 
 ### Property Resolution and The Prototype Chain
 
-If you try to access a property which an object doesn't have, the Javascript engine will check if the object references another object via its `[[Prototype]]`, and if it does, the property is searched on the referenced object. The prototype object can have a `[[Prototype]]` of it's own, so a property lookup will continue until either the property is found, or one of the prototype objects has `null` as the value of _its_ `[[Prototype]]`.
+If you try to access a property which an object doesn't have, the Javascript engine will check if the object references another object via its `[[Prototype]]`, and if it does, the property is searched on the referenced object. The prototype object can have a `[[Prototype]]` of its own, so a property lookup will continue recursively until either the property is found, or one of the prototype objects has `null` as the value of _its_ `[[Prototype]]`.
 
 If `null` is reached without the property being found, then the `undefined` value is given as the result of the property lookup - without actually creating the property and setting it to `undefined`. The sequence of objects traversed in this manner form a [singly linked list](https://en.wikipedia.org/wiki/Linked_list#Singly_linked_list) known as the "prototype chain" of the initial object.
 
+The properties that are set on the object itself are known as the objects _own_ properties, while those accessed through the prototype chain are known as _shared_ or _inherited_.
 
 ### Default Prototype Links
 
@@ -29,7 +30,7 @@ If a prototype object is not specified when an object is created, the object wil
 
 So how can we verify that the prototype links are setup as intended ? Although `[[Prototype]]` is an internal property, we can get a reference to the underlying object by using [`Object.getPrototypeOf()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf). We could also use the [`__proto__`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto) property, but it is only guaranteed to be available in browser environments for backwards-compatibility reasons, and is considered deprecated.
 
-Objects have to kinds of properties: _own_ and _shared_. Own properties are set on the object itself, whereas shared properties are accessed through the prototype chain, and are also called "inherited". Below, `foo` has an own property, "x", and a number of shared properties - all the properties on `Object.prototype` (like `hasOwnProperty()`, `toString()`, etc). Note that it doesn't matter what type the shared properties have - strings, functions, numbers, etc - they are all shared in exactly the same way.
+Below, `foo` has an own property, "x", and a number of shared properties - all the properties on `Object.prototype` (like `hasOwnProperty()`, `toString()`, etc). Note that it doesn't matter what type the shared properties have - strings, functions, objects, etc - they are all shared in exactly the same way.
 
 ```js
 let foo = { x: 42 }; // foo is prototype-linked to Object.prototype by default
@@ -127,7 +128,6 @@ let foo = {};
 Object.defineProperty(foo, "x", { writable: false, value: 42 }); // foo.x is 42 and is read-only
 Object.defineProperty(foo, "y", { writable: true, value: 42 }); // equivalent to `foo.y = 42`
 foo.x = 100; // does nothing, because x is not writable (i.e., it's read-only)
-foo["x"] = 100; // also does nothing
 foo.y = 100; // works as expected
 let bar = Object.create(foo);
 bar.x = 100; // does nothing, because a prototype has a read-only property with the same name
@@ -285,9 +285,9 @@ obj.x // => undefined
 let obj2 = new foo() // construct an object once the prototype was changed
 obj2.x // => 42
 obj2 instanceof foo // => true
-Object.getPrototypeOf(obj2) === Object.getPrototypeOf(obj) // => false
 obj2.constructor === foo // => false
 obj2.constructor === Object // => true
+Object.getPrototypeOf(obj2) === Object.getPrototypeOf(obj) // => false
 ```
 
 ![Breaking instanceof](breaking-instance-of.svg)
