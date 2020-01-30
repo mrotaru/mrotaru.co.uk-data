@@ -1,6 +1,4 @@
-## About
-
-I've been writing web applications for quite a few years now, full stack for the most part.
+Full-stack web developer based in London.
 
 <ul class='list--media'>
   <li>
@@ -23,6 +21,12 @@ I've been writing web applications for quite a few years now, full stack for the
 ## Blog Posts
 
 <ul class='list--media'>
+  <li class='blog-post-list-item'>
+    <h3><a href="/blog/windows-package-manager-scoop">Finally, a Decent Package Manager for Windows: Scoop</a></h3>
+    <p><span title="Last Updated" class="date">2020-01-30</span> <span class="separator">—</span>
+    An overview and tutorial for Scoop, a Windows app manager that is a really nice alternative to solutions like Chocolatey and Ninite
+    </p>
+  </li>
   <li class='blog-post-list-item'>
     <h3><a href="/blog/javascript-prototypes">JavaScript Prototypes</a></h3>
     <p><span title="Last Updated" class="date">2020-01-26</span> <span class="separator">—</span>

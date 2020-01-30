@@ -1,0 +1,9 @@
+{
+  "title": "Finally, a Decent Package Manager for Windows: Scoop",
+  "description": "An overview and tutorial for Scoop, a Windows app manager that is a really nice alternative to solutions like Chocolatey and Ninite",
+  "template": "blog-post",
+  "route": "/blog/windows-package-manager-scoop",
+  "keywords": "windows, package-manager, scoop",
+  "date-published": "",
+  "date-updated": ""
+}

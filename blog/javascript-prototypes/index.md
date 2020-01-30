@@ -1,5 +1,3 @@
-## Introduction
-
 ### What is a Prototype ?
 
 Many programming languages support associating behaviour (a set of methods) with objects. For example, if creating some sort of graphical user interface which includes a number of buttons, you don't want to manually associate each method with each object that represents a button. Instead, you expect the language to provide you with a way of creating objects that work as buttons, so that the "button" behaviour is _shared_ between all button objects.
