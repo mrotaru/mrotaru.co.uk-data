@@ -184,7 +184,7 @@ When an update is available, Scoop will download the new version to a new folder
 
 ## It's Not Perfect
 
-My biggest gripe with it the extra step of adding the `extras` bucket. If you start using a command-line app manager, chances are you'd want to use it for other things in addition to the dev tools in the `main` bucket; this segregation hurts UX in my opinion and I don't see a good reason for not merging `main` with `extras`, `versions` and perhaps `nightlies` - although it might be necessary for technical reasons which I'm not aware of.
+My biggest gripe with it the extra step of adding the `extras` bucket. If you start using a command-line app manager, chances are you'd want to use it for other things in addition to the dev tools in the `main` bucket; this segregation hurts UX in my opinion and I don't see a good reason for not merging `main` with `extras`, `versions` and perhaps `nightlies` - although it might not be practical for technical reasons which I'm not aware of.
 
 Some commands could use more documentation - for example, to me it's unclear when `search` searches buckets other than the added ones. There is official, online documentation provided as a GitHub wiki - personally I'm not a fan of this format as it's not easily searchable, and sliced up into many tiny documents which I find irksome to navigate - just a pet peeve of mine, not really a problem with Scoop.
 
