@@ -1,0 +1,35 @@
+<p>Full-stack web developer based in London</p>
+
+<ul class='list--media'>
+  <li>
+    <a
+      href="https://stackexchange.com/users/201300?tab=accounts">
+      <img
+        src="https://stackexchange.com/users/flair/201300.png"
+        width='208'
+        height='58'
+        alt="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
+        title="profile for Mihai Rotaru on Stack Exchange, a network of free, community-driven Q&A sites"
+      />
+      </a>
+    </li>
+    <li><a href="https://github.com/mrotaru">https://github.com/mrotaru</a></li>
+    <li><a href="https://codepen.io/mrotaru">https://codepen.io/mrotaru</a></li>
+    <li><a href="mihai.rotaru@gmx.com">mailto:mihai.rotaru@gmx.com</a></li>
+</ul>
+
+<h2>Blog Posts</h2>
+  {{#if meta.index.length }}
+  <ul class='list--media'>
+  {{#each meta.index}}
+    {{#if this.date-published}}
+    <li class='blog-post-list-item'>
+      <h3><a href="{{this.route}}">{{this.title}}</a></h3>
+      <p><span title="Last Updated" class="date">{{this.date-updated}}</span> <span class="separator">—</span>
+      {{this.description}}
+      </p>
+    </li>
+    {{/if}}
+  {{/each}}
+  </ul>
+  {{/if}}
