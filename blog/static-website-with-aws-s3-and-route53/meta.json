@@ -1,0 +1,9 @@
+{
+  "title": "Static Website with AWS S3 and Route 53",
+  "description": "Detailed tutorial for hosting a static website using AWS services, using the command-line as much as possible",
+  "template": "blog-post",
+  "route": "/blog/static-website-with-aws-s3-and-route53",
+  "keywords": "aws, cloud, static-website, DNS, aws-cli, S3, route-53, caching, httpie",
+  "date-published": "2020-02-13",
+  "date-updated": "2020-02-13"
+}
