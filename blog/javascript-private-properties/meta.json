@@ -1,0 +1,9 @@
+{
+  "title": "Private Properties in JavaScript",
+  "description": "An overview of various techniques that can be used to improvise private properties, and an examination of two proposals which aim to introduce language-level support for private properties and methods",
+  "template": "blog-post",
+  "route": "/blog/javascript-private-properties",
+  "keywords": "javascript, private, properties",
+  "date-published": "2020-02-24",
+  "date-updated": "2020-02-24"
+}
