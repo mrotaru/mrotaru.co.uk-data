@@ -52,7 +52,7 @@ a.publicMethod();
 a.privateMethod(); // => throws a `TypeError` exception
 ```
 
-You might wonder why the different behaviour when trying to access a "private" property versus a method; the former returns `undefined`, the latter throws an exception. When you try to access a non-existing property on an object, you get back `undefined`, which we can clearly see in the first case but it also happens in the second case; `a._internalMethod` (note the absence of the parentheses) is also `undefined`. The exception is thrown because the `undefined` value cannot be invoked as a function, which is what `()` does.
+You might wonder why the different behaviour when trying to access a "private" property versus a method; the former returns `undefined`, the latter throws an exception. When you try to access a non-existing property on an object, you get back `undefined`, which we can clearly see in the first case but it also happens in the second case; `a.privateMethod` (note the absence of the parentheses) is also `undefined`. The exception is thrown because the `undefined` value cannot be invoked as a function, which is what `()` does.
 
 A variation of this approach is to return an explicitly created object:
 
@@ -221,9 +221,9 @@ class Foo {
 }
 
 let a = new Foo();
-a.x; // => 
 a.y; // => 100
-a.publicMethod(); // => undefined
+a.publicMethod(); // => -58
+a.#x; // => throws `SyntaxError`
 ```
 
 Field declarations can also be used to _initialize_ the declared properties, which in many cases means there is no need for a `constructor`:
