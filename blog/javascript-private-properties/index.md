@@ -14,13 +14,18 @@ class Foo {
         this._x = 42; // "private" property
         this.y = 100; // public (standard) property
     }
-    _privateMethod() { return this._x + this.y; }
-    publicMethod() { return this._x - this.y; }
+    _privateMethod() {
+        return this._x + this.y;
+    }
+    publicMethod() {
+        return this._privateMethod() - this.y - this._x;
+    }
 }
 
 let a = new Foo();
 a._x; // => 42 - the property is not actually private
 a._privateMethod(); // => 142
+a.publicMethod(); // => 0
 ```
 
 A similar approach is used by JavaScript engines for non-standard features, like [`__proto__`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/proto) - note the double underscores before and after "proto". These properties should also be considered implementation details and should not be accessed directly.
@@ -29,7 +34,7 @@ A similar approach is used by JavaScript engines for non-standard features, like
 
 This method isn't really applicable to either `class` or "prototypal" classes; it is an entirely different pattern - but it does have the advantage of actually making properties invisible from "outside". The core idea is very simple - just enclose all private members in a closure, and set the public ones for each instance, as properties of `this`.
 
-One disadvantage of this approach is that the members (properties or methods) are not set on the function's `prototype` property and patterns that rely on that will not work - for example, using [`Object.create()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create) to create "instances".
+One disadvantage of this approach is that the members (properties or methods) are not set on the function's `prototype` property and patterns that rely on that will not work - for example, using [`Object.create()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create) to create "instances". We _could_ add public methods to the prototype, but they would not have access to private members. Also, we need to account for the fact that when functions are invoked without a context object (as `f()`, instead of `context.f()`), `this` will reference the global object. So we use [`apply()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply) to explicitly mention which object is to be used as `this`. More on [`this` in YDKJS](https://github.com/getify/You-Dont-Know-JS/blob/2nd-ed/objects-classes/ch2.md).
 
 Another disadvantage is the higher memory consumption - we create a separate function object for every private method of every instance. These would still be garbage collected along with the instance object, so it's not an issue if the instances are short-lived or not created in large quantities. When using "standard" approaches (`class` or prototypal classes) each method is still a separate object, but the methods are created once and set on the classes `prototype` object - which is _shared_ between all instances.
 
@@ -41,7 +46,7 @@ function Foo() {
         return x + this.y;
     }
     this.publicMethod = function() {
-        return x - this.y; // has access to private members
+        return privateMethod.apply(this) - this.y - x;
     }
 }
 
@@ -60,18 +65,19 @@ A variation of this approach is to return an explicitly created object:
 function Foo() {
     let x = 42; // "private" property
     this.y = 100; // public (standard) property
+    let that = this; // capture instance reference
     let privateMethod = function() {
-        return x + this.y;
+        return x + that.y;
     }
     return {
         publicMethod: function() {
-            return x - this.y;
+            return privateMethod() - that.y - x;
         }
     }
 }
 ```
 
-This is essentially the ["module pattern"](https://scotch.io/bar-talk/4-javascript-design-patterns-you-should-know) from days of yore - without the IIFE wrapper (if we were using `var`, the wrapper would still be required to prevent functions from "leaking" outside). It works very similarly to the description above, but it "breaks" the `instanceof` operator - avoid.
+This is essentially the ["module pattern"](https://scotch.io/bar-talk/4-javascript-design-patterns-you-should-know) from days of yore - without the IIFE wrapper (if we were using function declarations for the private methods - as opposed to function expressions - the wrapper would still be required to prevent functions from "leaking" outside). We also need to capture the value of `this` because inside `publicMethod()` `this` will be a reference to the returned "module" object, not the instance. This approach is fairly complicated and it also "breaks" the `instanceof` operator - avoid.
 
 ### WeakMap
 
@@ -79,7 +85,7 @@ This approach relies on using ES6-introduced [`WeakMap`](https://developer.mozil
 
 Now, consider that JavaScript is a garbage-collected language; as long as there is an accessible reference to an object, the object won't be deleted. An object being referenced by a key in a `Map` will prevent the object from being garbage-collected until the `Map` instance itself is garbage-collected. With `WeakMap`, if the only reference to an object is via a `WeakMap` key, then the object is considered eligible for garbage-collection.
 
-The main idea behind this pattern is to make use of the fact that every time a constructor is invoked, the `this` keyword is a reference to the object being constructed. Because on each invocation a new object is created, these references are unique. This allows us to store data associated with each created object in a key-value hash, like `Map` or `WeakMap`, using `this` as the key and data as the value.
+The main idea behind this pattern is to make use of the fact that every time a constructor is invoked, the `this` keyword is a reference to the object being constructed. A new object is created on each invocation, so these references are unique. This allows us to store data associated with each created object in a key-value hash, like `Map` or `WeakMap`, using `this` as the key and data as the value.
 
 The "data" corresponding to each instance, in this case, is composed of the instances private properties; the public ones we create as usual. In the example below, we're using a plain object to hold all the private properties for one particular instance. Because the value of `this` is available inside public instance methods, we can use it as a key to retrieve the current instances private properties - and this cannot be done from "outside", therefore keeping them private. The created instances can eventually go out of scope and be garbage-collected; when this happens, we want to make sure that the object used to hold the particular instances private properties is also garbage collected - and that's why we use a `WeakMap` instead of `Map`.
 
@@ -99,15 +105,15 @@ class Foo {
         });
     }
     publicMethod() {
-        return privateProps.get(this)["x"] - this.y;
+        const { x, privateMethod } = privateProps.get(this);
+        return privateMethod() - this.y - x;
     }
 }
 
 let a = new Foo();
 a.x; // => undefined
 a.y; // => 100
-a.publicMethod(); // => -58
-a.privateMethod(); // => throws a `TypeError` exception
+a.publicMethod(); // => 0
 ```
 
 This pattern can be tweaked in many ways; for example, by adding an IIFE to enclose a dedicated `privateProps` for each class, as described [here](https://stackoverflow.com/a/33533611/447661) or by creating a `WeakMap` for every private property, as done by `babel` polyfills. We're using a global for simplicity.
@@ -126,7 +132,7 @@ class Foo {
         }
     }
     publicMethod() {
-        return this[Foo.xKey] - this.y;
+        return this[Foo.privateMethodKey]() - this[Foo.xKey] - this.y;
     }
 }
 Foo.xKey = Symbol();
@@ -135,7 +141,7 @@ Foo.privateMethodKey = Symbol();
 let a = new Foo();
 a.x; // => undefined
 a.y; // => 100
-a.publicMethod(); // => -58
+a.publicMethod(); // => 0
 ```
 
 Instead of using the class itself as a namespace (or setting the symbols as static properties), and option is to use an IIFE for the keys:
@@ -206,7 +212,7 @@ a.publicMethod(); // => undefined
 
 ### Class Fields
 
-The [class fields proposal](https://github.com/tc39/proposal-class-fields) ([Stage 3](https://tc39.es/process-document/) as of Feb 2020) includes provisions for private properties - but not for private _methods_. When using the syntax in this proposal, simply initializing private properties in the constructor is not sufficient - we need to use the "class field declaration" syntax to _declare_ them. Public properties do not need to be declared. This proposal is currently implemented and enabled by default in Chrome, Firefox and Node - but not in IE, Edge or Safari.
+The [class fields proposal](https://github.com/tc39/proposal-class-fields) ([Stage 3](https://tc39.es/process-document/) as of Feb 2020) includes provisions for private properties - but not for private _methods_. When using the syntax in this proposal, simply initializing private properties in the constructor is not sufficient - we need to use the "class field declaration" syntax to _declare_ them. Public properties can also be _declared_, but it is not required. This proposal is currently implemented and enabled by default in Chrome, Firefox and Node - but not in IE, Edge or Safari.
 
 ```js
 class Foo {
@@ -273,6 +279,8 @@ Of course, for production use there is a [babel plugin](https://babeljs.io/docs/
 
 ## Summary
 
-Native language support for private properties is widespread, but not for private methods. Polyfills can be used to add support for both, at the cost of slightly higher memory consumption and decreased performance. If "true" privacy is desired, using not-yet-standard syntax in conjunction with the appropriate `babel` plugins is a solid option.
+Native language support for private properties is widespread, but not for private methods. Polyfills can be used to add support for both, and with nearing standardization, using language-level privacy features (in conjunction with the appropriate polyfills) does look like the optimal choice when "strong" privacy is desired. The impact on performance and memory consumption should be measured, as it can be significant.
 
-Opting for one of the "soft" privacy approaches remains a valid choice; which one to choose depends on the trade-offs that are acceptable in each situation. Generally, the approach described in the "Symbols" section strikes a nice balance and is a safe default - assuming an ES6 environment.
+Implementing approaches like `WeakMaps` or closures "by hand" generally doesn't make a lot of sense because of the added noise and complexity - using the native syntax is preferable, and letting the polyfills handle the implementation details.
+
+When "strong" privacy is not a requirement, it is perfectly reasonable to employ one of the "weak" privacy approaches - like prefixing private members with underscores, or storing them on `Symbol` keys.
