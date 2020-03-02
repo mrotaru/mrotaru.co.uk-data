@@ -54,7 +54,7 @@ let a = new Foo();
 a.x; // => undefined
 a.y; // => 100
 a.publicMethod();
-a.privateMethod(); // => throws a `TypeError` exception
+a.privateMethod(); // = > 💥 `TypeError` exception
 ```
 
 You might wonder why the different behaviour when trying to access a "private" property versus a method; the former returns `undefined`, the latter throws an exception. When you try to access a non-existing property on an object, you get back `undefined`, which we can clearly see in the first case but it also happens in the second case; `a.privateMethod` (note the absence of the parentheses) is also `undefined`. The exception is thrown because the `undefined` value cannot be invoked as a function, which is what `()` does.
@@ -159,7 +159,7 @@ let Foo = (function() {
             }
         }
         publicMethod() {
-            return this[xKey] - this.y;
+            return this[privateMethodKey]() - this[xKey] - this.y;
         }
     }
 })();
@@ -229,7 +229,7 @@ class Foo {
 let a = new Foo();
 a.y; // => 100
 a.publicMethod(); // => -58
-a.#x; // => throws `SyntaxError`
+// a.#x; // => 💥 SyntaxError: Private field '#x' must be declared in an enclosing class
 ```
 
 Field declarations can also be used to _initialize_ the declared properties, which in many cases means there is no need for a `constructor`:
@@ -253,18 +253,17 @@ class Foo {
     #x = 42;
     y = 100;
     #privateMethod() {
-        return this.#x - this.y;
+        return this.#x + this.y;
     }
     publicMethod() {
-        console.log(this.#x)
-        return this.#privateMethod() + this.#x;
+        return this.#privateMethod() - this.#x - this.y;
     }
 }
 let a = new Foo();
-a.x; // => 
+// a.#x; // => 💥 SyntaxError: Private field '#x' must be declared in an enclosing class
 a.y; // => 100
-a.publicMethod(); // => -16 (x - y + x)
-// a.#privateMethod(); => // throws
+a.publicMethod(); // => 0
+// a.#privateMethod(); // 💥 SyntaxError: Private field '#privateMethod' must be declared in an enclosing class
 ```
 
 While usage is simple, there are subtle semantics to be considered when interacting with other aspects of the language; the proposal contains [more details](https://github.com/tc39/proposal-private-methods#relationship-to-other-proposals). This proposal has been in Stage 3 since 2017, but it looks like things have settled now and it will be included in ES2020. However, unlike "Class Fields", this proposal has much more limited browser support. Among major browser engines, it is only supported in V8 behind a flag.
