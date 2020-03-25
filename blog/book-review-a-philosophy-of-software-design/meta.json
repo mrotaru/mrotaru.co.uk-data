@@ -1,0 +1,9 @@
+{
+  "title": "Book Review: A Philosophy of Software Design",
+  "description": "An excellent read; there is some overlap with other similar books, but there are more than enough original ideas and the book does provide a different perspective on software design, often going against current, generally-accepted best practices",
+  "template": "blog-post",
+  "route": "/blog/book-review-a-philosophy-of-software-design",
+  "keywords": "book-review, review, design, architecture, software",
+  "date-published": "2020-03-25",
+  "date-updated": "2020-03-25"
+}
